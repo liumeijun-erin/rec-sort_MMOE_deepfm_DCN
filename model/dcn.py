@@ -8,13 +8,13 @@ Q2:如何实现层内w，b共享 -- 不能直接用dense + unit；需要tf计算
 import tensorflow as tf
 
 config = {  
-    'feature_len': 10,
-    'embedding_dim': 5,
-    'label_len': 1,
+    'feature_len': 11,
+    'embedding_dim': 8,
+    'label_len': 2,
     'n_parse_threads': 4,
     'shuffle_buffer_size': 1024,
     'prefetch_buffer_size': 1,
-    'batch_size': 16,
+    'batch_size': 32,
 
     'learning_rate': 0.01,
     'mlp_hidden_units' : [64,32],
@@ -23,12 +23,12 @@ config = {
     'mlp_l2' : 0.1,
 
     'train_path': 'data/train',
-    'test_path': 'data/val',
+    'test_path': 'data/test',
     'saved_embedding': 'data/saved_dcn_embedding',
 
-    'max_steps': 80000,
-    'train_log_iter': 1000,
-    'test_show_iter': 1000,
+    'max_steps': 30000,
+    'train_log_iter':3000,
+    'test_show_iter': 3000,
     'last_test_auc':0.5,
 
     'saved_checkpoint': 'data/dcn/saved_ckpt',
@@ -105,6 +105,7 @@ def dcn_fn(inputs, is_test):
     cross_out_ = cross_layers('cross', inputs=input_feature_emb, cross_layer_num=config['cross_layer_num'])
     out_ = tf.concat([cross_out_, mlp_out_], axis = 1)
     out_ = nn_tower('out', out_, [1], activation=None)
+    pctr = tf.reshape(out_,[-1])
     out_tmp = tf.sigmoid(out_)
 
     if is_test:
@@ -112,13 +113,13 @@ def dcn_fn(inputs, is_test):
         tf.add_to_collections('output_tensor', out_tmp)
     
     loss_ = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(
-        logits = out_, labels=inputs['label']
+        logits = pctr, labels=inputs['label'][:,0]
     ))
 
     out_dic = {
         'loss': loss_,
         'ground_truth': inputs['label'][:, 0],
-        'prediction': out_[:, 0]
+        'prediction': pctr
     }
     return out_dic
 
@@ -152,4 +153,3 @@ def setup_graph(inputs, is_test=False):
         result['train_op'] = train_op
 
         return result
-

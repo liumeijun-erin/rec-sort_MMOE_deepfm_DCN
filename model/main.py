@@ -8,9 +8,10 @@ model模块中模型训练部分：
 from ps_fn import PS 
 from input_fn import InputFn 
 from auc_fn import AUCUtils
-from dcn import setup_graph, config
+# from mmoe import setup_graph, config
+# from dcn import setup_graph, config
 # from deepfm import setup_graph, config
-# from fnn import setup_graph, config
+from dnn import setup_graph, config
 from save_load_model import save_model_to_ckpt, save_model_to_pb, tensorboard_show_graph
 import tensorflow as tf
 import os
@@ -96,7 +97,7 @@ def save_pb():
 if __name__ == '__main__':
     train()
     save_pb()
-    tensorboard_show_graph(config['saved_pd'])
+    # tensorboard_show_graph(config['saved_pd'])
     #  tensorboard --logdir log
     #  http://localhost:6006
 
