@@ -32,7 +32,7 @@ config = {
 
     'train_path': 'data/train',
     'test_path': 'data/test',
-    'saved_embedding': 'data/saved_dnn_embedding',
+    'saved_embedding': 'data/saved_mmoe_embedding',
 
     'max_steps': 30000,
     'train_log_iter': 300,
@@ -108,7 +108,7 @@ def mmoe_fn(inputs, is_test):
                 use_bias=True, activation=config['activation_function'],l2=config['mlp_l2']
             )
             tower_out = nn_tower(
-                'tower_out_'+str(i),tower_inputs[i], [1],
+                'tower_out_'+str(i),tower_out, [1],
                 use_bias=True, activation=None, l2=config['mlp_l2']
             )
             tower_outs.append(tower_out)
@@ -117,9 +117,11 @@ def mmoe_fn(inputs, is_test):
     with tf.variable_scope('mmoe_out'):
         pctr = tower_outs[0]
         pctcvr = tower_outs[0] * tower_outs[1]
+        pcvr = tower_outs[1]
 
     pctr = tf.reshape(pctr,[-1])
     pctcvr = tf.reshape(pctcvr,[-1])
+    pcvr = tf.reshape(pcvr,[-1])
     pred = tf.sigmoid(tower_outs)
 
     if is_test:
@@ -138,8 +140,8 @@ def mmoe_fn(inputs, is_test):
 
     out_dic = {
         'loss': loss_,
-        'ground_truth': inputs['label'][:, 0],
-        'prediction': pctr
+        'ground_truth': inputs['label'][:, 1],
+        'prediction': pctcvr
     }
     return out_dic
 
